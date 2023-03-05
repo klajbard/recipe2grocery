@@ -12,6 +12,32 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+func sendMessage(w http.ResponseWriter, message string, errorCode ...int) {
+	resp := ApiResponse{
+		Message: message,
+		Success: true,
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	if len(errorCode) > 0 && errorCode[0] > 0 {
+		w.WriteHeader(errorCode[0])
+		resp.Success = false
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func sendData(w http.ResponseWriter, data interface{}) {
+	resp := ApiResponse{
+		Data:    data,
+		Success: true,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(w).Encode(resp)
+}
+
 func GetRecipes(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	page, _ := strconv.Atoi(ps.ByName("page"))
 
@@ -24,12 +50,11 @@ func GetRecipes(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, http.StatusText(500)+err.Error(), http.StatusInternalServerError)
+		sendMessage(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(recipes)
+	sendData(w, recipes)
 }
 
 func GetRecipe(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -40,22 +65,35 @@ func GetRecipe(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, http.StatusText(500)+err.Error(), http.StatusInternalServerError)
+		sendMessage(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(recipe)
+	sendData(w, recipe)
 }
 
-func CreateRecipe(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func RemoveRecipe(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	id := ps.ByName("id")
+
+	err := Recipes.Remove(bson.M{"_id": bson.ObjectIdHex(id)})
+
+	if err != nil {
+		fmt.Println(err)
+		sendMessage(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	sendMessage(w, fmt.Sprintf("Successfully removed recipe with id: %s", id))
+}
+
+func UpsertRecipe(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	id := r.URL.Query().Get("id")
 
 	var recipe Recipe
 	err := json.NewDecoder(r.Body).Decode(&recipe)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		sendMessage(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -63,10 +101,17 @@ func CreateRecipe(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	document := bson.M{"slug": recipe.Slug, "title": recipe.Title, "description": recipe.Description, "ingredients": recipe.Ingredients}
 
 	if id != "" {
-		Recipes.Upsert(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": document})
+		_, err = Recipes.Upsert(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": document})
 	} else {
-		Recipes.Insert(document)
+		err = Recipes.Insert(document)
 	}
+
+	if err != nil {
+		sendMessage(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	sendMessage(w, "Successfully updated recipe")
 }
 
 func SendRecipe(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -74,11 +119,18 @@ func SendRecipe(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	err := json.NewDecoder(r.Body).Decode(&list)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		sendMessage(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	SendList(&list)
+	err = SendList(&list)
+
+	if err != nil {
+		sendMessage(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	sendMessage(w, "Successfully send grocery list to Slack")
 }
 
 func App(w http.ResponseWriter, r *http.Request, p httprouter.Params) {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import axios from "axios";
 import { onMounted, reactive, ref } from "vue";
-import { Recipe } from "../../models";
+import { ApiResponse, Recipe } from "../../models";
 import { recipesStore } from "../../stores/recipes.store";
 let pageNum = 1;
 
@@ -10,12 +10,14 @@ const reachedEnd = ref(false);
 
 const loadMore = async () => {
   axios
-    .get(`${import.meta.env.VITE_BACKEND_URL}/recipes/${pageNum}`)
+    .get<ApiResponse<Recipe[]>>(
+      `${import.meta.env.VITE_BACKEND_URL}/recipes/${pageNum}`
+    )
     .then((resp) => {
-      if (resp.data == null) {
+      if (resp.data == null || !resp.data.data) {
         throw new Error("No more data to fetch");
       }
-      recipes.push(...resp.data);
+      recipes.push(...resp.data.data);
       pageNum += 1;
     })
     .catch((err) => {

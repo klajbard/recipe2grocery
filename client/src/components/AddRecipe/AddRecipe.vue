@@ -3,6 +3,7 @@ import { ref } from "vue";
 import AddIngredients from "./AddIngredients.vue";
 import { recipeStore } from "../../stores/recipe.store";
 import axios from "axios";
+import { ApiResponse } from "../../models";
 
 const title = ref<string>("");
 const description = ref<string>("");
@@ -32,10 +33,18 @@ const handleSubmit = () => {
   }
 
   axios
-    .post(`${import.meta.env.VITE_BACKEND_URL}/recipe`, {
+    .post<ApiResponse>(`${import.meta.env.VITE_BACKEND_URL}/recipe`, {
       title: title.value,
       description: description.value,
       ingredients: recipeStore.ingredients,
+    })
+    .then((resp) => {
+      if (resp.data.success) {
+        const url = window.location.href;
+        window.location.href = `${url}${
+          url.indexOf("?") > -1 ? "&" : "?"
+        }success=true`;
+      }
     })
     .catch((err) => console.error(err));
 };

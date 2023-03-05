@@ -24,17 +24,13 @@ const units = [
       class="form-group"
     >
       <div class="ingredient">
-        <label :for="`ingredient-name-${index}`">Name</label>
         <label :for="`ingredient-amount-${index}`">Amount</label>
         <label :for="`ingredient-unit-${index}`">Unit</label>
-        <input
-          :id="`ingredient-name-${index}`"
-          v-model="ingredient.name"
-          name="ingredient-name"
-        />
+        <label :for="`ingredient-name-${index}`">Name</label>
         <input
           :id="`ingredient-amount-${index}`"
-          v-model.number="ingredient.amount"
+          v-model="ingredient.amount"
+          type="number"
           name="ingredient-amount"
         />
         <select
@@ -46,6 +42,11 @@ const units = [
             {{ unit }}
           </option>
         </select>
+        <input
+          :id="`ingredient-name-${index}`"
+          v-model="ingredient.name"
+          name="ingredient-name"
+        />
       </div>
       <button
         v-if="recipeStore.ingredients.length > 1"

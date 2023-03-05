@@ -1,10 +1,24 @@
 <script setup lang="ts">
 import { recipesStore } from "../../stores/recipes.store";
 import axios from "axios";
+import { reactive } from "vue";
+
+const excludes = reactive<Set<string>>(new Set());
+
+const toggleExclude = (key: string) => {
+  if (excludes.has(key)) {
+    excludes.delete(key);
+  } else {
+    excludes.add(key);
+  }
+};
 
 const sendRecipes = () => {
   const groceryList = Object.entries(recipesStore.ingredients).reduce<string[]>(
     (acc, [key, value]) => {
+      if (excludes.has(key)) {
+        return acc;
+      }
       const amount = value.reduce<string>((localAcc, details) => {
         if (localAcc !== "") {
           localAcc += ", ";
@@ -18,7 +32,9 @@ const sendRecipes = () => {
     []
   );
   axios
-    .post(`${import.meta.env.VITE_BACKEND_URL}/recipe/send`, { list: groceryList })
+    .post(`${import.meta.env.VITE_BACKEND_URL}/recipe/send`, {
+      list: groceryList,
+    })
     .catch((err) => console.error(err));
 };
 </script>
@@ -37,13 +53,16 @@ const sendRecipes = () => {
   <h2>Shopping list</h2>
   <ul class="list">
     <li
-      v-for="entry in Object.entries(recipesStore.ingredients)"
+      v-for="entry in Object.entries(recipesStore.ingredients).sort()"
+      :class="excludes.has(entry[0]) && 'exclude'"
       :key="entry[0]"
     >
-      <strong>{{ entry[0] }}</strong> -
-      <template v-for="ingredient in entry[1]"
-        >{{ ingredient.amount }} {{ ingredient.unit }}</template
-      >
+      <button class="list-button" @click="toggleExclude(entry[0])">
+        <strong>{{ entry[0] }}</strong> -
+        <template v-for="ingredient in entry[1]"
+          >{{ ingredient.amount }} {{ ingredient.unit }}</template
+        >
+      </button>
     </li>
   </ul>
   <button
@@ -61,6 +80,10 @@ const sendRecipes = () => {
   gap: 1rem;
 }
 
+.exclude .list-button {
+  text-decoration: line-through;
+}
+
 .recipe {
   padding: 0.5rem 1rem;
   background: #f39f8644;
@@ -75,5 +98,43 @@ const sendRecipes = () => {
 
 .list {
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0;
+}
+
+.list li {
+  position: relative;
+  list-style: none;
+  padding-left: 2rem;
+}
+
+.list-button {
+  flex: 1;
+  background: none;
+  padding: 0.5rem;
+  border: none;
+  outline: none;
+  text-align: left;
+  font-size: inherit;
+  cursor: pointer;
+  position: relative;
+}
+
+.list li:nth-child(odd) {
+  background: #fff1;
+}
+
+.list-button:before {
+  content: "o";
+  position: absolute;
+  top: 0.5rem;
+  left: -1rem;
+}
+
+.exclude .list-button:before {
+  content: "✔";
+  color: green;
 }
 </style>

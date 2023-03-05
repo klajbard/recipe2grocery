@@ -30,5 +30,7 @@ MONGODB_DB=""
     - `amount` {`Float32`} - amount of ingredient
     - `unit` {`String`} - unit of ingredient amount
 - GET `/recipes/${pageNum}` - Get paginated recipes
+- GET `/recipes/${recipeId}` - Get recipe based on given id
+- DELETE `/recipes/${recipeId}` - Remove recipe based on given id
 - POST `/recipe/send` - Send ingredients of chosen recipes (backend could send a Slack notification etc)
   - `list` {`String[]`} - Grocery list

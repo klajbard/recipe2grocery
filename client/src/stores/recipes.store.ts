@@ -49,9 +49,7 @@ export const recipesStore = reactive<RecipeStore>({
     this.recipes.forEach((recipe) => this.addRecipeIngredients(recipe));
   },
   removeRecipe(recipe: Recipe) {
-    const elementIndex = this.recipes.findIndex(
-      ({ slug }) => slug === recipe.slug
-    );
+    const elementIndex = this.recipes.findIndex(({ id }) => id === recipe.id);
     this.recipes.splice(elementIndex, 1);
     this.recalculateIngredients();
   },

@@ -31,15 +31,22 @@ func main() {
 	mux := httprouter.New()
 	mux.GET("/", App)
 	mux.GET("/recipes/:page", GetRecipes)
-	mux.POST("/recipe", CreateRecipe)
+	mux.POST("/recipe", UpsertRecipe)
 	mux.GET("/recipe/:id", GetRecipe)
+	mux.DELETE("/recipe/:id", RemoveRecipe)
 	mux.POST("/recipe/send", SendRecipe)
 
 	mux.ServeFiles("/assets/*filepath", http.Dir("client/dist/assets"))
 	// mux.HandleMethodNotAllowed = false
 	mux.NotFound = http.HandlerFunc(NotFoundHandler)
 
-	handler := cors.Default().Handler(mux)
+	handler := cors.New(cors.Options{
+		AllowedMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodDelete,
+		},
+	}).Handler(mux)
 
 	http.ListenAndServe(":8081", handler)
 }
