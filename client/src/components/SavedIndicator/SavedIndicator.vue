@@ -3,7 +3,7 @@ import { recipesStore } from "../../stores/recipes.store";
 </script>
 <template>
   <router-link :to="{ name: 'Saved Recipes' }" class="recipes">
-    Saved {{ recipesStore.recipes.length }}
+    {{ recipesStore.recipes.length }} ✔
   </router-link>
 </template>
 <style scoped>
