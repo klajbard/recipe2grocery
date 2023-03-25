@@ -101,7 +101,7 @@ func UpsertRecipe(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	document := bson.M{"slug": recipe.Slug, "title": recipe.Title, "description": recipe.Description, "ingredients": recipe.Ingredients}
 
 	if id != "" {
-		_, err = Recipes.Upsert(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": document})
+		err = Recipes.Update(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": document})
 	} else {
 		err = Recipes.Insert(document)
 	}

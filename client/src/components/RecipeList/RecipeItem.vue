@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import axios from "axios";
 import { ref, watch } from "vue";
-import { ApiResponse, Recipe } from "../../models";
+import { ApiResponse, ExtendedRecipe } from "../../models";
 import { recipesStore } from "../../stores/recipes.store";
-const props = defineProps<{ recipe: Recipe }>();
+import IconElement from "../Icons/IconElement.vue";
 
-const isAdded = ref<boolean>(false);
-const isRemoved = ref<boolean>(false);
+const props = defineProps<{ recipe: ExtendedRecipe }>();
+defineEmits(['show-overlay'])
+
+const isAdded = ref<boolean>(!!recipesStore.recipes.find(
+  ({ slug }) => slug === props.recipe.slug
+));
 const container = ref<HTMLDivElement | null>(null);
 watch(recipesStore.recipes, () => {
   isAdded.value = !!recipesStore.recipes.find(
@@ -16,108 +20,86 @@ watch(recipesStore.recipes, () => {
 
 const handleUndo = () => {
   axios
-    .post<ApiResponse>(`${import.meta.env.VITE_BACKEND_URL}/recipe`, {
+    .post<ApiResponse>(`${import.meta.env.VITE_BACKEND_URL}/recipe?id=${props.recipe.id}`, {
       title: props.recipe.title,
       description: props.recipe.description,
       ingredients: props.recipe.ingredients,
     })
     .then((resp) => {
       if (resp.data.success) {
-        isRemoved.value = false;
+        props.recipe.removed = false;
       }
     });
 };
 
-const handleRemove = () => {
-  if (confirm(`Are you sure you want to remove "${props.recipe.title}"?`)) {
-    axios
-      .delete<ApiResponse>(
-        `${import.meta.env.VITE_BACKEND_URL}/recipe/${props.recipe.id}`
-      )
-      .then((resp) => {
-        if (resp.data.success) {
-          isRemoved.value = true;
-        }
-      });
-  }
-};
-
-const showOverlay = () => {
-  console.log("Show more details of recipe");
-};
 </script>
 <template>
-  <div v-if="isRemoved">
+  <div v-if="recipe.removed">
     <button class="undo" @click="handleUndo()">
       Undo removal of {{ recipe.title }}
     </button>
   </div>
-  <div v-else class="recipe" ref="container">
-    <div class="content">
-      <h3 class="title">{{ recipe.title }}</h3>
-      <div class="box">
-        <ul class="ingredients">
-          <li v-for="ingredient in recipe.ingredients" :key="ingredient.name">
-            {{ ingredient.name }}
-          </li>
-        </ul>
-      </div>
-    </div>
+  <div v-else class="recipe" ref="container" :class="isAdded && 'selected'">
+    <h3 class="title">{{ recipe.title }}</h3>
     <div class="button-group">
-      <button @click="showOverlay()">Read more</button>
-      <button @click="handleRemove()">Remove</button>
-      <button
-        class="add-remove-button"
-        @click="
-          isAdded
-            ? recipesStore.removeRecipe(recipe)
-            : recipesStore.addRecipe(recipe)
-        "
-      >
-        {{ isAdded ? "-" : "+" }}
+      <button class="info" @click="$emit('show-overlay')" :title="`More information about ${recipe.title}`"><icon-element
+          name="info" /></button>
+      <button class="add" @click="
+        isAdded
+          ? recipesStore.removeRecipe(recipe)
+          : recipesStore.addRecipe(recipe)
+      " :title="isAdded ? `Remove ${recipe.title} from list` : `Add ${recipe.title} to list`">
+        <icon-element :name="isAdded ? 'minus' : 'plus'" />
       </button>
     </div>
   </div>
 </template>
 <style scoped>
 .recipe {
-  padding: 0.5rem 1rem;
-  background: #f39f8644;
+  padding: 0.75rem 1rem;
+  background: var(--background-brown);
   border-radius: var(--border-radius);
   text-align: left;
-  gap: 1rem;
+  gap: 0.5rem;
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: space-between;
 }
 
+.recipe.selected {
+  background: var(--dark-green);
+}
+
 .title {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.ingredients {
-  box-sizing: border-box;
-  display: flex;
-  flex-wrap: wrap;
-  padding: 0;
   margin: 0;
-  justify-content: space-evenly;
-  list-style: none;
-  gap: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-.ingredients li {
-  background: #fff1;
-  border-radius: var(--border-radius);
-  padding: 0.5rem 1rem;
-  cursor: default;
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
-.add-remove-button {
-  width: 4rem;
+.button-group button {
+  height: 2.5rem;
+  min-width: 4rem;
+  flex: 1;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
+
+.add {
+  background-color: var(--color-green-fade);
+}
+
+.info {
+  background-color: var(--color-blue-fade);
+}
+
 .undo {
   width: 100%;
 }

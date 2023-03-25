@@ -1,5 +1,11 @@
 <script setup lang="ts">
+import { onMounted } from "vue";
 import Indicator from "./components/SavedIndicator/SavedIndicator.vue";
+import {recipesStore} from './stores/recipes.store'
+
+onMounted(() => {
+  recipesStore.readLS()
+});
 </script>
 
 <template>

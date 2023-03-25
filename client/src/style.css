@@ -13,13 +13,37 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
   --border-radius: 8px;
   --button-background: #1a1a1a88;
+  --color-orange: #fc5e5e;
+  --color-blue-fade: #5e5ecc99;
+  --color-green-fade: #5eac5e99;
+  --color-orange-fade: #cc5e5e99;
+  --dark-green: #004225;
+  --highlight: #fff1;
+  --background-brown: #f39f8644;
   --columns: 1;
 }
 
+*::-webkit-scrollbar {
+  width: 8px;
+  background: #ffffff11;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 6px;
+  background: white;
+  background-clip: padding-box;
+  border: 2px solid rgba(0, 0, 0, 0)
+}
+
 h1, h2, h3, h4, h5 {
-  margin-top: 0;
+  margin-top: 0.5rem;
+}
+
+h2 {
+  font-size: 2.25rem;
 }
 
 a {
@@ -45,8 +69,11 @@ h1 {
 }
 
 button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   border-radius: var(--border-radius);
-  border: 1px solid transparent;
+  border: 2px solid #fff3;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
@@ -67,15 +94,15 @@ button:focus-visible {
 
 #app {
   box-sizing: border-box;
+  position: relative;
   max-width: 40rem;
   width: 100%;
   margin: 0 auto;
   padding: 0 0.5rem;
   min-height: 100vh;
-  text-align: center;
 }
 
-@media only screen and (min-width: 600px) {
+@media only screen and (min-width: 500px) {
   :root {
     --columns: 2;
   }

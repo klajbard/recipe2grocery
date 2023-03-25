@@ -7,6 +7,10 @@ export interface IngredientDetails<T=number> {
   unit: string
 }
 
+export interface ExtendedRecipe extends Recipe {
+  removed: boolean;
+}
+
 export interface Recipe {
   id: string
   title: string
@@ -19,4 +23,8 @@ export interface ApiResponse<T = Object> {
   success: boolean
   data?: T
   message?: string
+}
+
+export enum LSKeys {
+  RECIPES = 'recipes'
 }
