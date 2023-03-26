@@ -1,5 +1,8 @@
 # Recipe 2 Grocery List - Backend
 
+
+https://user-images.githubusercontent.com/25983938/227757978-71276651-75dd-4fd9-a19f-ef5616eaf3e9.mp4
+
 Link to [Frontend](client/README.md)
 
 Simple app to store recipes and create grocery list from the ingredients of selected recipes.
