@@ -98,10 +98,19 @@ func UpsertRecipe(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	recipe.Slug = slug.Make(recipe.Title)
-	document := bson.M{"slug": recipe.Slug, "title": recipe.Title, "description": recipe.Description, "ingredients": recipe.Ingredients}
+	document := Recipe{
+		Description: recipe.Description,
+		Slug:        recipe.Slug,
+		Id:          bson.ObjectIdHex(id),
+		Ingredients: recipe.Ingredients,
+		Title:       recipe.Title,
+	}
 
 	if id != "" {
 		err = Recipes.Update(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": document})
+		if err != nil && err.Error() == "not found" {
+			err = Recipes.Insert(document)
+		}
 	} else {
 		err = Recipes.Insert(document)
 	}
